@@ -25,6 +25,7 @@
         "symfony/yaml": "5.1.*"
     },
     "require-dev": {
+        "phpunit/phpunit": "dev-master",
         "symfony/maker-bundle": "^1.19"
     },
     "config": {
@@ -45,6 +46,8 @@
             "App\\Tests\\": "tests/"
         }
     },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "replace": {
         "paragonie/random_compat": "2.*",
         "symfony/polyfill-ctype": "*",
