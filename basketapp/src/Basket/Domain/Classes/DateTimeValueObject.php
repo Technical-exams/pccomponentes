@@ -17,12 +17,13 @@ class DateTimeValueObject
     public function __construct(\DateTime $value)
     {
         $time = \DateTimeImmutable::createFromMutable($value);
+        parent::__construct($time);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function toScalar()
+    public function asScalar()
     {
         return $this->value()->getTimestamp();
     }
