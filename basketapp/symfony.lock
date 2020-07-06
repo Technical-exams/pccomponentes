@@ -1,4 +1,7 @@
 {
+    "doctrine/collections": {
+        "version": "1.6.5"
+    },
     "doctrine/inflector": {
         "version": "1.4.3"
     },
