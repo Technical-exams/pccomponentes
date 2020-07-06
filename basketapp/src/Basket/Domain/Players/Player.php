@@ -52,7 +52,7 @@ class Player
              ->setLabel($label)
              ->setRole($role)
              ->setRating($rating);
-             
+
         if (! is_null($created))
             $this->setCreated($created);
         else
@@ -105,7 +105,7 @@ class Player
      */
     public function rating(): PlayerRatingValueObject
     {
-        return $this->rating();
+        return $this->rating;
     }
 
     /**
@@ -115,7 +115,7 @@ class Player
      */
     public function created(): PlayerCreatedValueObject
     {
-        return $this->created();        
+        return $this->created;        
     }
 
     /**
@@ -140,7 +140,10 @@ class Player
     protected function setLabel($label){
         if (! is_scalar($label))
             throw new \InvalidArgumentException(sprintf("Bad label value for player, given value of type '%s'",gettype($label)));
-        $this->label = trim((string)$label);
+        $label = trim((string)$label);
+        if (strlen($label) == 0)
+            throw new \InvalidArgumentException(sprintf("Bad label value for player, given empty value"));
+        $this->label = $label;
         return $this;
     }
 
@@ -164,7 +167,7 @@ class Player
      * @throws \InvalidArgumentException when $rating arg is not valid
      */
     protected function setRating($rating){
-        $this->role = new PlayerRatingValueObject($rating);
+        $this->rating = new PlayerRatingValueObject($rating);
         return $this;
     }    
 
@@ -177,7 +180,7 @@ class Player
      * @throws \InvalidArgumentException when $created arg is not valid
      */
     protected function setCreated($created){
-        $this->role = PlayerCreatedValueObject::fromDateTime($created);
+        $this->created = PlayerCreatedValueObject::fromDateTime($created);
         return $this;
     }    
 
