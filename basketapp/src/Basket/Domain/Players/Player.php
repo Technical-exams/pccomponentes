@@ -46,7 +46,7 @@ class Player
      */
     protected $created;
 
-    public function __construct(int $num, string $label, string $role, int $rating, int $created=null)
+    public function __construct(int $num, string $label, string $role, int $rating, \DateTime $created=null)
     {
         $this->setNum($num)
              ->setLabel($label)
