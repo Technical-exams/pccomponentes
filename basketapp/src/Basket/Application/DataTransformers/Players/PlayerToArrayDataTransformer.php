@@ -24,7 +24,10 @@ class PlayerToArrayDataTransformer
      */
     public function createPlayer($data) : Player
     {
-        $created = new \DateTime('@'.((string)$data['created']));
+        $created = null;
+        if (array_key_exists('created',$data) && is_int($data['created'])){            
+            $created = new \DateTime('@'.((string)$data['created']));
+        }            
         return new Player($data['num'], $data['label'],$data['role'],$data['rating'], $created);
     }
 }

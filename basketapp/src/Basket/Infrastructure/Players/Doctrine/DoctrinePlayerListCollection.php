@@ -90,13 +90,12 @@ class DoctrinePlayerListCollection
      * Removes a player fom the collection
      * 
      * @param Player $player
-     * @return Player or null
+     * @return Bool True if removed
      */
-    public function removeElement(Player $player)
+    public function removeElement($player)
     {
         $array_player = $this->player_transformer->transform($player);
-        $result = parent::removeElement($array_player);
-        return is_null($result) ? $result : $player;
+        return parent::removeElement($array_player);        
     }
 
     /**
@@ -105,7 +104,7 @@ class DoctrinePlayerListCollection
      * @param Player $player
      * @return bool
      */
-    public function contains(Player $player)
+    public function contains($player)
     {
         $array_player = $this->player_transformer->transform($player);
         return parent::contains($array_player);
@@ -118,7 +117,7 @@ class DoctrinePlayerListCollection
      * @param Player $player
      * @return int|false
      */
-    public function indexOf(Player $player){        
+    public function indexOf($player){        
         return parent::indexOf($this->player_transformer->transform($player));
     }
 
@@ -154,7 +153,7 @@ class DoctrinePlayerListCollection
      * @param Player $player
      * @return void
      */
-    public function set($key, Player $player){
+    public function set($key, $player){
         if ($player->num()->asScalar() != $key)
             throw new \InvalidArgumentException(sprintf("\$key must contain \$player num. Expected %s, given %s",$player->num()->asScalar(),$key));
         
@@ -168,10 +167,10 @@ class DoctrinePlayerListCollection
      * @param Player $player
      * @return true
      */
-    public function add(Player $player)
+    public function add($player)
     {
         $array_player = $this->player_transformer->transform($player);        
-        return parent::set($player->num,$array_player);
+        return parent::set($player->num()->value(),$array_player);
     }
 
     /**
@@ -179,8 +178,7 @@ class DoctrinePlayerListCollection
      */
     public function getIterator()
     {        
-        $result = array_map(array($this->player_transformer,'createPlayer'), $this->getValues());
-        return new \ArrayIterator($result);
+        return new \ArrayIterator($this->toArray());
     }
 
 }
