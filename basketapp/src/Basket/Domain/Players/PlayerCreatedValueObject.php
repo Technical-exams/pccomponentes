@@ -15,4 +15,13 @@ class PlayerCreatedValueObject
         parent::__construct($time);
     }
 
+
+    public static function fromDateTime(\DateTime $created){
+        $instance = new static();
+        $parent_instance = new DateTimeValueObject($created);
+        $instance->value = $parent_instance->value;
+        unset($parent_instance);
+        return $instance;
+    }
+
 }
