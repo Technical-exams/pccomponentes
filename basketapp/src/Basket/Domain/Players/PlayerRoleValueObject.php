@@ -1,4 +1,4 @@
-<?php namespace Bakset\Domain\Players;
+<?php namespace Basket\Domain\Players;
 
 use Basket\Domain\Classes\SingleValueObject;
 
