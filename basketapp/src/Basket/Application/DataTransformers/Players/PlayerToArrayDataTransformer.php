@@ -18,4 +18,13 @@ class PlayerToArrayDataTransformer
             "created" => $player->created()->asScalar()
         ];
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function createPlayer($data) : Player
+    {
+        $created = new \DateTime('@'.((string)$data['created']));
+        return new Player($data['num'], $data['label'],$data['role'],$data['rating'], $created);
+    }
 }

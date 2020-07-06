@@ -12,4 +12,12 @@ interface PlayerDataTransformer
      * @return array|object The transformed player
      */
     public function transform(Player $player);
+
+    /**
+     * Creates a player entity from structured data
+     *
+     * @param array|object $data
+     * @return Player
+     */
+    public function createPlayer($data) : Player;
 }
