@@ -4,9 +4,13 @@ use Basket\Domain\Players\Player;
 use Doctrine\Common\Collections\ArrayCollection;
 
 use Basket\Application\DataTransformers\Players\PlayerToArrayDataTransformer as ArrayTransformer;
+use Basket\Domain\Players\PlayerList;
+use Basket\Domain\Players\PlayerNumValueObject;
+use Doctrine\Common\Collections\Criteria;
 
 class DoctrinePlayerListCollection
     extends ArrayCollection
+    implements PlayerList
 {
     /**
      * Transformer for Players input/output
@@ -14,6 +18,56 @@ class DoctrinePlayerListCollection
      * @var ArrayTransformer
      */
     protected $player_transformer;
+
+
+    /**
+     * List of players already sorted
+     * This list is prepared for fetch operations
+     *
+     * @var ArrayCollection
+     */
+    protected $sortedList;
+
+    /**
+     * {@inheritDoc}
+     */
+    public function append(Player $player) : void
+    {
+        $num = $player->num()->value();
+        if (! is_null($this->get($num)))
+            throw new \InvalidArgumentException(sprintf("Player with num %s is already in the player list",$num));
+        $this->add($player);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function extract(PlayerNumValueObject $num) : Player
+    {
+        $result = $this->remove($num->value());
+        if (is_null($result))
+            throw new \InvalidArgumentException(sprintf("Player with numn %s was not in the player list",$num->value()));
+        return $result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function list() : array
+    {
+        print_r($this->sortedList);
+        exit;
+        $result = $this->sortedList ? $this->sortedList->toArray() : $this->toArray();
+        $this->sortedList = null;
+        return $result;
+    }
+
+    public function sort(string $property) : void
+    {
+        $criteria = new Criteria();
+        $criteria->orderBy([$property => Criteria::ASC]);
+        $this->sortedList = $this->matching($criteria);
+    }
 
     /**
      * Undocumented function
