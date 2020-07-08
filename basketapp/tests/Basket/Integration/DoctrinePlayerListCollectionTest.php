@@ -23,298 +23,273 @@ class DoctrinePlayerListCollectionTest extends TestCase
      */
     protected static $list;
 
-    public static function setUpBeforeClass() : void{
-        self::$transformer = new PlayerToArrayDataTransformer();
-        self::$list = new DoctrinePlayerListCollection(self::$transformer);
+    protected function getTransformer()
+    {
+        self::$transformer = self::$transformer ?? new PlayerToArrayDataTransformer();
+        return self::$transformer;
     }
 
-    public function ValidArrayPlayersProvider(){
-        return [
-            ["num"=>0, "role"=>"BASE", "rating"=>0, "label"=>"Base 0","created"=>null],
-            ["num"=>1, "role"=>"BASE", "rating"=>1, "label"=>"Base 1","created"=>null],
-            ["num"=>2, "role"=>"BASE", "rating"=>2, "label"=>"Base 2","created"=>strtotime('now')],
-            ["num"=>3, "role"=>"ALERO", "rating"=>3, "label"=>"Alero 3","created"=>strtotime('+1 second')],
-            ["num"=>4, "role"=>"ALERO", "rating"=>4, "label"=>"Alero 4","created"=>null],
-            ["num"=>5, "role"=>"ALERO", "rating"=>5, "label"=>"Alero 5","created"=>strtotime('now')],
+    public function transformerProvider()
+    {
+        return [[$this->getTransformer()]];
+    }
+
+    protected function getPlayerList()
+    {
+        self::$list = self::$list ?? new DoctrinePlayerListCollection($this->getTransformer());
+        return self::$list;
+    }
+
+    public function ValidSetOfPlayersDataProvider()
+    {
+        return [[[
             ["num"=>6, "role"=>"PIVOT", "rating"=>6, "label"=>"Pivot 6","created"=>strtotime('+1 second')],
-            ["num"=>7, "role"=>"PIVOT", "rating"=>7, "label"=>"Pivot 7","created"=>null],
-            ["num"=>8, "role"=>"PIVOT", "rating"=>8, "label"=>"Pivot 8","created"=>strtotime('now')],
+            ["num"=>4, "role"=>"ALERO", "rating"=>4, "label"=>"Alero 4","created"=>null],
             ["num"=>9, "role"=>"ESCOLTA", "rating"=>9, "label"=>"Escolta 9","created"=>strtotime('+1 second')],
-        ];
+            ["num"=>2, "role"=>"BASE", "rating"=>2, "label"=>"Base 2","created"=>strtotime('now')],
+            ["num"=>0, "role"=>"BASE", "rating"=>0, "label"=>"Base 0","created"=>null],
+            ["num"=>3, "role"=>"ALERO", "rating"=>3, "label"=>"Alero 3","created"=>strtotime('+1 second')],
+            ["num"=>5, "role"=>"ALERO", "rating"=>5, "label"=>"Alero 5","created"=>strtotime('now')],
+            ["num"=>7, "role"=>"PIVOT", "rating"=>7, "label"=>"Pivot 7","created"=>null],
+            ["num"=>1, "role"=>"BASE", "rating"=>1, "label"=>"Base 1","created"=>null],            
+            ["num"=>8, "role"=>"PIVOT", "rating"=>8, "label"=>"Pivot 8","created"=>strtotime('now')],
+        ]]];
     }
 
-    public function ValidPlayersProvider(){
-        $players = $this->ValidArrayPlayersProvider();
-        $transformer = new PlayerToArrayDataTransformer();
-        $result = array_map(array($transformer,'createPlayer'),$players);
-        $result = array_map(function($player){return [$player];},$result);
-        return $result;
+    public function ValidSetOfPlayersProvider()
+    {
+        $players = $this->ValidSetOfPlayersDataProvider();
+        $players = reset($players);
+        $players = reset($players);
+        $result = array_map(array($this->getTransformer(),'createPlayer'),$players);
+        return [[$result]];
     }
-
     
 
     /**
-     * @dataProvider ValidPlayersProvider
+     * @dataProvider transformerProvider
      */
-    public function testSetIncreasesCount($player){
-        $count = self::$list->count();
-        self::$list->set($player->num()->value(),$player);
-        $this->assertCount($count+1,self::$list,"Collection::set method does not increase the count");
+    public function testConstructor($transformer)
+    {
+        $player_list = new DoctrinePlayerListCollection(self::$transformer);
+        $this->assertInstanceOf(DoctrinePlayerListCollection::class,$player_list);
+        $this->assertCount(0,$player_list,"Constructor does not reset the count");
+        return $player_list;
     }
 
     /**
-     * @depends testSetIncreasesCount
-     *
+     * @dataProvider ValidSetOfPlayersDataProvider
      */
-    public function testClearSetsCountToZero(){
-        self::$list->clear();
-        $this->assertCount(0,self::$list,"Collection::clear method does decrease the count to zero");
-    }
-
-    /**
-     * @depends testClearSetsCountToZero
-     * @dataProvider ValidPlayersProvider
-     */
-    public function testAddIncreasesCount($player){
-        self::$list->clear();
-        $count = self::$list->count();
-        self::$list->add($player);
-        $this->assertCount($count+1,self::$list,"Collection::add method does not increase the count");
-    }
-
-    /**
-     * @depends testClearSetsCountToZero
-     * @dataProvider ValidPlayersProvider
-     */
-    public function testSetIdempotence($player){
-        self::$list->clear();
-        $count = self::$list->count();
-        self::$list->set($player->num()->value(),$player);
-        self::$list->set($player->num()->value(),$player);
-        $this->assertCount($count+1,self::$list,"Collection::set method is not idempotent function");
-    }
-
-    /**
-     * @depends testClearSetsCountToZero
-     * @dataProvider ValidPlayersProvider
-     */
-    public function testAddIdempotence($player){
-        self::$list->clear();
-        $count = self::$list->count();
-        self::$list->add($player);
-        self::$list->add($player);
-        $this->assertCount($count+1,self::$list,"Collection::add method is not idempotent function");
+    public function testList($array_of_players)
+    {
+        $player_list = $this->getMockBuilder(DoctrinePlayerListCollection::class)
+                            ->setMethods(['toArray'])
+                            ->setConstructorArgs([$this->getTransformer()])
+                            ->getMock();
+        $player_list->method('toArray')->willReturn($array_of_players);
+        $this->assertIsArray($player_list->list(),"List does not return an array");
+        $this->assertCount(count($array_of_players),$player_list->list(),"List does not return all collected Players");    
     }
 
 
     /**
-     * @depends testClearSetsCountToZero
-     * @depends testAddIdempotence
-     * @depends testSetIdempotence
-     * @dataProvider ValidPlayersProvider
+     * @dataProvider ValidSetOfPlayersProvider
+     * @depends testList
      */
-    public function testAddAfterSetHasNoEffect($player){
-        self::$list->clear();
-        $count = self::$list->count();
-        self::$list->set($player->num()->value(),$player);        
-        self::$list->add($player);
-        $this->assertCount($count+1,self::$list,"Collection::add method after set method, increases the count unexpectedly");
-    }
-
-    /**
-     * @depends testClearSetsCountToZero
-     * @depends testAddIdempotence
-     * @depends testSetIdempotence
-     * @dataProvider ValidPlayersProvider
-     */
-    public function testSetAfterAddHasNoEffect($player){
-        self::$list->clear();
-        $count = self::$list->count();
-        self::$list->add($player);
-        self::$list->set($player->num()->value(),$player);                
-        $this->assertCount($count+1,self::$list,"Collection::set method after add method, increases the count unexpectedly");
-    }
-
-    /**
-      * @depends testSetAfterAddHasNoEffect      
-      */
-    public function testFedCollectionIsIterable(){
-        $iterator = self::$list->getIterator();
-        $this->assertIsIterable($iterator,"Collection is not iterable");
-    }
-
-    /**
-     * @depends testFedCollectionIsIterable
-     * @depends testClearSetsCountToZero
-     * @depends testAddIncreasesCount
-     */
-    public function testCountMatchesNumberOfNewAdditions(){
-        self::$list->clear();
-        $additions = $this->ValidPlayersProvider();
-        
-        foreach($additions as $addition){
-            self::$list->add(reset($addition));
+    public function testAppend($players)
+    {
+        $transformer = $this->getTransformer();
+        $player_list = $this->getPlayerList();
+        foreach($players as $player){
+            $list = $player_list->list();
+            $count = count($list);
+            $player_list->append($player);
+            $list = $player_list->list();
+            $last_player =end($list);
+            $transformed_player = $transformer->transform($player);
+            $transformed_player_last_player = $transformer->transform($last_player);
+            $this->assertEquals($transformed_player, $transformed_player_last_player,"Append does not add the player at the end");
+            $this->assertCount($count+1,$list,"Append does not increase the list count");
         }
-        $this->assertCount(count($additions),self::$list,"List count method does not count correctly");
-    }
-
-
-    /**
-     * @depends testFedCollectionIsIterable
-     */
-    public function testLastReturnsPlayer(){
-        $player = self::$list->last();
-        $this->assertInstanceOf(Player::class,$player,"Last function does not return a Player instance");
-    }
-
-
-    /**
-     * @depends testFedCollectionIsIterable
-     */
-    public function testFirstReturnsPlayer(){
-        $player = self::$list->first();
-        $this->assertInstanceOf(Player::class,$player,"First function does not return a Player instance");
+        return $player_list;
     }
 
     /**
-     * @depends testFirstReturnsPlayer
+     * @dataProvider ValidSetOfPlayersProvider
+     * @depends testAppend
      */
-    public function testNextReturnsPlayer(){
-        $player = self::$list->next();
-        $this->assertInstanceOf(Player::class,$player,"Next function does not return a Player instance");
-    }
-
-
-    /**
-     * @depends testNextReturnsPlayer
-     */
-    public function testCurrentReturnsPlayer(){
-        $player = self::$list->current();
-        $this->assertInstanceOf(Player::class,$player,"Current function does not return a Player instance");
-    }
-
-
-    /**
-     * @depends testFedCollectionIsIterable
-     */
-    public function testToArrayReturnsArrayOfPlayers(){
-        $array_of_players = self::$list->toArray();
-        $this->assertGreaterThan(0,count($array_of_players),"toArray returns an empty array");
-        $this->assertEquals(self::$list->count(),count($array_of_players),"toArray returns an empty array");
-        $this->assertInstanceOf(Player::class,reset($array_of_players),"toArray does not feed the returned array with Player instances");
-    }
-
-
-    /**
-     * @depends testFedCollectionIsIterable
-     */
-    public function testGetValuesReturnsArrayOfPlayers(){
-        $array_of_players = self::$list->getValues();
-        $this->assertGreaterThan(0,count($array_of_players),"getValues returns an empty array");        
-        $this->assertInstanceOf(Player::class,reset($array_of_players),"toArray does not feed the returned array with Player instances");
-
-    }
-
-    /**
-     * @depends testFedCollectionIsIterable
-     */
-    public function testGetReturnsTheRightPlayer(){
-        $player = self::$list->get(8);        
-        $this->assertInstanceOf(Player::class,$player,"get does not return a Player Instance");
-        $this->assertEquals('PIVOT',$player->role()->value(),"get does not return the right Player");
-    }
-
-    /**
-     * @depends testFedCollectionIsIterable
-     * @depends testAddIncreasesCount
-     * @dataProvider ValidPlayersProvider
-     */
-    public function testIndexOfGetsThePlayerNum($player){
-        self::$list->add($player);
-        $index = self::$list->indexOf($player);
-        $this->assertEquals($player->num()->value(),$index, "indexOf does not return the Player number");        
-    }
-
-    /**
-     * @depends testFedCollectionIsIterable
-     * @dataProvider ValidPlayersProvider
-     */
-    public function testContainsFindsContainedPlayer($player){
-        $result = self::$list->contains($player);
-        $this->assertTrue($result, "contains does not find a contained Player");
-    }
-
-    /**
-     * @depends testContainsFindsContainedPlayer
-     * @depends testClearSetsCountToZero
-     * @dataProvider ValidPlayersProvider
-     */
-    public function testContainsDoesNotFindMissingPlayers($player){
-        self::$list->clear();
-        $this->assertCount(0,self::$list,"List is not empty");
-        $result = self::$list->contains($player);
-        $this->assertFalse($result, "contains finds a missing Player");
-    }
-
-    /**
-     * @depends testAddIncreasesCount
-     * @depends testContainsDoesNotFindMissingPlayers
-     * @dataProvider ValidPlayersProvider
-     */
-    public function testRemoveElementDropsPlayer($player){
-        self::$list->add($player);
-        $count = self::$list->count();
-        $dropped_player = self::$list->removeElement($player);
-        $this->assertTrue($dropped_player,"RemoveElement does not return true when succeeded");
-        $contained = self::$list->contains($player);
-        $this->assertFalse($contained,"RemoveElement does not remove Players");
-        $this->assertCount($count-1,self::$list,"RemoveElement does not decrease the count");
-    }
-
-    /**
-     * @depends testRemoveElementDropsPlayer
-     * @depends testAddIncreasesCount
-     * @dataProvider ValidPlayersProvider
-     */
-    public function testRemoveElementDoesNotDropsMissingPlayer($player){
-        self::$list->add($player);
-        $dropped_player = self::$list->removeElement($player);
-        $count = self::$list->count();
-        $missing = self::$list->removeElement($player);
-        $this->assertFalse($missing,"RemoveElement of a missing player does not return false when missed");
-        $this->assertCount($count,self::$list,"RemoveElement decreases the count");
-    }
-
-    /**
-     * @depends testSetIncreasesCount
-     * @depends testContainsDoesNotFindMissingPlayers
-     * @dataProvider ValidPlayersProvider
-     */
-    public function testRemoveDropsFoundPlayer($player)
+    public function testHas($players,$player_list)
     {
-        self::$list->set($player->num()->value(),$player);
-        $count = self::$list->count();       
-        $dropped_player = self::$list->remove($player->num()->value());
-        $this->assertInstanceOf(Player::class, $dropped_player,"Remove does not return the Player when succeeded");
-        $contained = self::$list->contains($dropped_player);
-        $this->assertFalse($contained,"Remove does not remove Players");
-        $this->assertCount($count-1,self::$list,"Remove does not decrease the count");        
+        $player_list = $player_list ?? $this->getPlayerList();
+        foreach($players as $player)
+            $this->assertTrue($player_list->has($player),"Exists does not detect a collected Player");
+        return $player_list;
     }
 
     /**
-     * @depends testSetIncreasesCount
-     * @depends testContainsDoesNotFindMissingPlayers
-     * @depends testRemoveDropsFoundPlayer
-     * @dataProvider ValidPlayersProvider
+     * @dataProvider ValidSetOfPlayersProvider
+     * @depends testAppend
+     * @depends testHas     
      */
-    public function testRemoveDoesNotDropMissingPlayer($player)
+    public function testAppendTwiceThrowsException($players,$player_list)
     {
-        self::$list->set($player->num()->value(),$player);        
-        $dropped_player = self::$list->remove($player->num()->value());
-        $count = self::$list->count();
-        $missing = self::$list->remove($dropped_player->num()->value());
-        $this->assertNull($missing,"Remove does not return null when failed");        
-        $this->assertCount($count,self::$list,"Remove decreases the count");        
+        $player_list = $player_list ?? $this->getPlayerList();        
+        $this->expectException(\InvalidArgumentException::class);        
+        foreach($players as $player){
+            if ($player_list->has($player))
+                $player_list->append($player);
+        }
+        return $player_list;
     }
+
+    /**
+     * @depends testList
+     * @depends testAppend
+     */
+    public function testListContents($player_list)
+    {
+        $player_list = $player_list ?? $this->getPlayerList();
+        $result = $player_list->list();
+        $this->assertInstanceOf(Player::class, reset($result),"List function does not return an array of players");
+        $this->assertInstanceOf(Player::class, next($result),"List function does not return an array of players");
+        $this->assertInstanceOf(Player::class, end($result),"List function does not return an array of players");
+        return $player_list;
+    }
+
+    /**
+     * @depends testListContents
+     */
+    public function testSortByRole($player_list)
+    {
+        $player_list = $player_list ?? $this->getPlayerList();
+        $player_list->sort("role");                
+        $result = $player_list->list();
+        $first = reset($result);                        
+        $second = next($result);
+        while($first && $second){
+            $this->assertLessThanOrEqual($second->role()->value(),$first->role()->value(),"Sort method does not reorder the results by role");
+            $first = current($result);
+            $second = next($result);
+        }
+        return $player_list;  
+    }
+    /**
+     * @depends testSortByRole
+     */
+    public function testSortByNum($player_list)
+    {
+        $player_list = $player_list ?? $this->getPlayerList();
+        $player_list->sort("num");
+        $result = $player_list->list();        
+        $first = reset($result);                        
+        $second = next($result);
+        while($first && $second){
+            $this->assertLessThanOrEqual($second->num()->value(),$first->num()->value(),"Sort method does not reorder the results by num");
+            $first = current($result);
+            $second = next($result);
+        }                
+
+    }
+
+    /**
+     * @depends testSortByRole
+     * @depends testSortByNum
+     */
+    public function testReSortFromRoleToNum($player_list)
+    {
+        $player_list = $player_list ?? $this->getPlayerList();
+        $player_list->sort("role");
+        $player_list->sort("num");
+        $result = $player_list->list();        
+        $first = reset($result);                        
+        $second = next($result);
+        while($first && $second){
+            $this->assertLessThanOrEqual($second->num()->value(),$first->num()->value(),"Sort method does not reorder the results by num after sorted once by role");
+            $first = current($result);
+            $second = next($result);
+        }
+        return $player_list;
+    }
+
+    /**
+     * @dataProvider ValidSetOfPlayersDataProvider
+     * @depends testListContents
+     */
+    public function testSortByNone($players,$player_list)
+    {
+        $player_list = $player_list ?? $this->getPlayerList();
+        $transformer = $this->getTransformer();
+        $player_list->sort();
+        $result = $player_list->list();
+       
+        $first_sorted = reset($result);
+        $second_sorted = next($result);
+        $first_player = reset($players);
+        $second_player = next($players);
+        while($first_sorted && $second_sorted){
+            $first_sorted = $transformer->transform($first_sorted);
+            $second_sorted = $transformer->transform($second_sorted);
+            // "created" PROPERTY IS INITIALIZED DURING LIST PLAYERS FEED,
+            // SO TEST DATA MAY DIFFER IN THIS PROPERTY FROM FED LIST
+            $first_player['created'] = $first_sorted['created'];
+            $second_player['created'] = $second_sorted['created'];
+
+            $this->assertEquals($first_player,$first_sorted,"Sort by none property does not recover the original order");
+            $this->assertEquals($second_player,$second_sorted,"Sort by none property does not recover the original order");
+            $first_player = current($players);
+            $second_player = next($players);            
+            $first_sorted = current($result);
+            $second_sorted = next($result);
+        }
+        return $player_list;
+    }
+
+
+    /**
+     * @dataProvider ValidSetOfPlayersProvider
+     * @depends testHas
+     */
+    public function testExtract($players, $player_list){
+        $player_list = $player_list ?? $this->getPlayerList();
+        $transformer = $this->getTransformer();
+        foreach ($players as $player) {
+            $count = count($player_list->list());
+            if ($player_list->has($player)) {
+                $extracted_player = $player_list->extract($player->num());
+                $extracted_player_data = $transformer->transform($extracted_player);
+                $player_data = $transformer->transform($player);                
+                // "created" PROPERTY IS INITIALIZED DURING LIST PLAYERS FEED,
+                // SO TEST DATA MAY DIFFER IN THIS PROPERTY FROM FED LIST
+                $player_data['created'] = $extracted_player_data['created'];
+                $this->assertCount($count-1, $player_list->list(), "Extract does not increase the list count");
+                $this->assertInstanceOf(Player::class, $extracted_player, "Extract does not return a Player instance");
+                $this->assertEquals($player_data, $extracted_player_data, "Extract does not return the right Player");
+            }
+        }
+        return $player_list;
+    }
+
+    /**
+     * @dataProvider ValidSetOfPlayersProvider
+     * @depends testExtract
+     * @depends testHas     
+     */
+    public function testExtractTwiceThrowsException($players,$player_list)
+    {
+
+        $player_list = $player_list ?? $this->getPlayerList();
+        $this->expectException(\InvalidArgumentException::class);        
+
+        foreach ($players as $player) {
+            $count = count($player_list->list());
+            if ($player_list->has($player)) {
+                $player_list->extract($player->num());
+            }
+            $player_list->extract($player->num());
+        }
+        return $player_list;
+    }
+
+
 
 }
