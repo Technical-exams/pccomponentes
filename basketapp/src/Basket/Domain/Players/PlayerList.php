@@ -1,6 +1,7 @@
 <?php namespace Basket\Domain\Players;
 
 interface PlayerList
+    extends \ArrayAccess
 {
     /**
      * Append a player to the list
@@ -47,5 +48,7 @@ interface PlayerList
      * @return boolean
      */
     public function has(Player $player) : bool;
+
+
     
 }

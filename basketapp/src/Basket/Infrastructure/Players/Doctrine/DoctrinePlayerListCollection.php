@@ -152,4 +152,34 @@ class DoctrinePlayerListCollection
         return new \ArrayIterator($this->toArray());
     }
 
+
+   
+    /**
+     * Required by interface ArrayAccess.
+     * {@inheritDoc}
+     */
+    public function offsetGet($offset)
+    {        
+        return $this->toPlayer(parent::offsetGet($offset));
+    }
+
+    /**
+     * Required by interface ArrayAccess.
+     * 
+     * @param mixed $offset
+     * @param Player $value
+     * @throws \InvalidArgumentException if $value is not a Player instance
+     */
+    public function offsetSet($offset, $value)
+    {
+        if (!($value instanceof Player)) 
+            throw new \InvalidArgumentException("Can only set Players in the Player List");
+        
+        if (! isset($offset)) {
+            $this->append($value);
+            return;
+        }
+        $this->set($offset, $value);
+    }
+
 }
