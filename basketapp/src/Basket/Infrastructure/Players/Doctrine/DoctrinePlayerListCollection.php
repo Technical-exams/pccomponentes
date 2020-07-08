@@ -17,8 +17,7 @@ class DoctrinePlayerListCollection
      *
      * @var ArrayTransformer
      */
-    protected $player_transformer;
-
+    protected $transformer;
 
     /**
      * List of players already sorted
@@ -29,14 +28,46 @@ class DoctrinePlayerListCollection
     protected $sortedList;
 
     /**
+     * Transforms a player using the transformer
+     *
+     * @param Player $player
+     * @return array
+     */
+    protected function toData(Player $player): array
+    {
+        return $this->transformer->transform($player);
+    }
+
+    /**
+     * Transforms back data onto a Player
+     *
+     * @param array $player_data
+     * @return Player
+     */
+    protected function toPlayer(array $player_data): Player
+    {
+        return $this->transformer->createPlayer($player_data);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function has(Player $player) : bool
+    {
+        $array_player = $this->toData($player);
+        return $this->containsKey($player->num()->value()) || $this->contains($array_player);
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function append(Player $player) : void
     {
         $num = $player->num()->value();
-        if (! is_null($this->get($num)))
+        if ($this->has($player))
             throw new \InvalidArgumentException(sprintf("Player with num %s is already in the player list",$num));
-        $this->add($player);
+        $array_player = $this->toData($player);        
+        $this->set($player->num()->value(),$array_player);
     }
 
     /**
@@ -47,7 +78,7 @@ class DoctrinePlayerListCollection
         $result = $this->remove($num->value());
         if (is_null($result))
             throw new \InvalidArgumentException(sprintf("Player with numn %s was not in the player list",$num->value()));
-        return $result;
+        return $this->toPlayer($result);
     }
 
     /**
@@ -55,176 +86,62 @@ class DoctrinePlayerListCollection
      */
     public function list() : array
     {
-        print_r($this->sortedList);
-        exit;
-        $result = $this->sortedList ? $this->sortedList->toArray() : $this->toArray();
+        $result = $this->sortedList ? $this->sortedList->toArray() : $this->toArray();        
         $this->sortedList = null;
-        return $result;
+        return array_map( array($this,'toPlayer'), $result );
     }
 
-    public function sort(string $property) : void
+    public function sort(string $property = "") : void
     {
-        $criteria = new Criteria();
-        $criteria->orderBy([$property => Criteria::ASC]);
-        $this->sortedList = $this->matching($criteria);
+        if (!empty($property)) {
+            $criteria = new Criteria();
+            $criteria->orderBy([$property => Criteria::ASC]);
+            $this->sortedList = $this->matching($criteria);
+        }else{
+            $this->sortedList = null;    
+        }
     }
 
     /**
      * Undocumented function
      *
-     * @param ArrayTransformer $player_transformer
+     * @param ArrayTransformer $transformer
      * @param array $data
      */
-    public function __construct(ArrayTransformer $player_transformer, array $data = [])
+    public function __construct(ArrayTransformer $transformer)
     {
-        $this->player_transformer = $player_transformer;
-        parent::__construct($data);
+        $this->transformer = $transformer;
+        parent::__construct();
     }
 
     /**
      * {@inheritDoc}
      */
-    public function toArray()
-    {
-        return array_map( array($this->player_transformer,'createPlayer'), parent::toArray());        
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function first()
-    {
-        $result = parent::first();
-        return $this->player_transformer->createPlayer($result);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected function createFrom(array $elements)
-    {
-        $PlayerElements = array_map( array($this->player_transformer,'createPlayer'), $elements);
-        return parent::createFrom($PlayerElements);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function last()
-    {
-        $result = parent::last();
-        return $this->player_transformer->createPlayer($result);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function current()
-    {
-        $result = parent::current();
-        return $this->player_transformer->createPlayer($result);
-    }
-
-    public function next()
-    {
-        $result = parent::current();
-        return $this->player_transformer->createPlayer($result);
-    }
-
-    /**
-     * Removes the player with the given "num"
-     */
-    public function remove($key)
-    {
-        $result = parent::remove($key);
-        return is_null($result) ? $result : $this->player_transformer->createPlayer($result);
-    }
-
-    /**
-     * Removes a player fom the collection
-     * 
-     * @param Player $player
-     * @return Bool True if removed
-     */
-    public function removeElement($player)
-    {
-        $array_player = $this->player_transformer->transform($player);
-        return parent::removeElement($array_player);        
-    }
-
-    /**
-     * Reveals if a player is in the collection
-     *
-     * @param Player $player
-     * @return bool
-     */
-    public function contains($player)
-    {
-        $array_player = $this->player_transformer->transform($player);
-        return parent::contains($array_player);
-    }
-
-    /**
-     * Gets the index of a player in the collection
-     * if player is indexed
-     *
-     * @param Player $player
-     * @return int|false
-     */
-    public function indexOf($player){        
-        return parent::indexOf($this->player_transformer->transform($player));
-    }
-
-    /**
-     * Gets the player with the given index
-     *
-     * @param mixed $key
-     * @return Player|null
-     */
-    public function get($key)
-    {
-        $result = parent::get($key);
-        return is_null($result) ? $result : $this->player_transformer->createPlayer($result);
-    }
-
-    /**
-     * Returns an array with Players
-     *
-     * @return array
-     */
-    public function getValues()
-    {
-        $values = parent::getValues();
-        $result = array_map(array($this->player_transformer,'createPlayer'), $values);
+    protected function createFrom(array $players)
+    {        
+        $result = new static($this->transformer);
+        foreach($players as $player)
+            $result->set($player['num'],$player);
         return $result;
     }
+
 
     /**
      * Sets a player in the collection
      * placed at the given $key position
      *
      * @param mixed $key
-     * @param Player $player
+     * @param array $player
      * @return void
      */
     public function set($key, $player){
-        if ($player->num()->asScalar() != $key)
-            throw new \InvalidArgumentException(sprintf("\$key must contain \$player num. Expected %s, given %s",$player->num()->asScalar(),$key));
-        
-        $array_player = $this->player_transformer->transform($player);
-        parent::set($key,$array_player);
-    }
-
-    /**
-     * Adds a player into the collection or Updates it if contained
-     *
-     * @param Player $player
-     * @return true
-     */
-    public function add($player)
-    {
-        $array_player = $this->player_transformer->transform($player);        
-        return parent::set($player->num()->value(),$array_player);
+        if ( !is_array($player))
+            throw new \InvalidArgumentException("\$player must be an associative array");
+        if ( !array_key_exists('num',$player))
+            throw new \InvalidArgumentException("\$player must have 'num'");
+        if ($player['num'] != $key)
+            throw new \InvalidArgumentException(sprintf("\$key must contain \$player num. Expected %s, given %s",$player['num'] ,$key));        
+        return parent::set($key,$player);
     }
 
     /**
