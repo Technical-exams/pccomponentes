@@ -4,20 +4,11 @@ interface PlayersRepository
 {
     /**
      * Find All Players
-     *
+     * @param array $orderBy Player properties to be used for sorting the results
      * @return Array The list of active players
      */
-    public function findAll();
+    public function findAll(array $orderBy = []);
  
-    
-    /**
-     * Prepares the sort for a search 
-     *
-     * @param string $property The property the search is ordered by
-     * @return PlayerRepository The repository able to find Players with the requested sort order
-     */
-    public function sortBy(string $property): PlayersRepository;
-
     /**
      * Adds or replaces a player
      *
