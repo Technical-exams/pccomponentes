@@ -36,7 +36,16 @@ interface PlayerList
      * @return void
      * @throw \InvalidArgumentException
      */
-    public function sort(string $property) : void;
+    public function sort(string $property = "") : void;
 
+
+    /**
+     * Reveals if a player appears in the list
+     * Any variation of player 
+     *
+     * @param Player $player
+     * @return boolean
+     */
+    public function has(Player $player) : bool;
     
 }
