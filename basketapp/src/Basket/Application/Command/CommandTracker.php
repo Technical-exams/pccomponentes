@@ -1,12 +1,25 @@
 <?php namespace Basket\Application\Command;
 
-use Basket\Application\Requests\RequestSerializer;
+use Basket\Application\Events\RequestEvent;
+use Basket\Application\Factories\DataTransformers\RequestEventDataTransformerFactory;
 
-interface CommandTracker
+abstract class CommandTracker
 {
-    public function __construct(RequestSerializer $serializer);
 
-    public function track($request);
+    /**
+     * Factory for creating the right transformer for each RequestEvent
+     *
+     * @var RequestEventDataTransformerFactory
+     */
+    protected $factory;
 
-    public function bulk(): array;
+    public function __construct(RequestEventDataTransformerFactory $factory){
+        $this->factory = $factory;
+    }
+
+    protected function getTransformer(RequestEvent $commandEvent){
+        return ($this->factory)($commandEvent);
+    }
+
+    abstract public function track(RequestEvent $commandEvent);    
 }
