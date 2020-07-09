@@ -25,7 +25,7 @@ class RequestEventToArrayDataTransformer
         $request_data = $this->requestToArray($requestEvent->request());
         $event_data = [$time->format('c')];
         
-        return array_merge($request_data, $event_data);
+        return array_merge($event_data, $request_data);
     }
 
     protected function requestToArray(CommandRequest $request): array

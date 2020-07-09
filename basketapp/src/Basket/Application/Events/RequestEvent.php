@@ -31,6 +31,6 @@ class RequestEvent{
 
     public function timestamp(): int
     {
-        return $this->timestamp();
+        return $this->timestamp;
     }
 }
