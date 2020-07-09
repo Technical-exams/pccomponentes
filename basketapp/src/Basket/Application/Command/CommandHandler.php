@@ -17,7 +17,6 @@ abstract class CommandHandler
 
     public function handle(CommandRequest $request): CommandResponse
     {
-        $this->tracker->track($request);
         return $this->getService()->execute($request);
     }
 
