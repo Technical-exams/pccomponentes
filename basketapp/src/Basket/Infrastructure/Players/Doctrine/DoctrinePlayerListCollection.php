@@ -103,12 +103,15 @@ class DoctrinePlayerListCollection
     }
 
     /**
-     * {@inheritDoc} function
+     * Constructor
      */
     public function __construct()
     {
+        $data = [];
         $this->serializer = new ArraySerializer();
-        parent::__construct();
+        if (func_num_args()>0 && is_array(func_get_arg(0)))
+            $data = func_get_arg(0);
+        parent::__construct($data);
     }
 
     /**
