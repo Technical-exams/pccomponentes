@@ -1,15 +1,15 @@
-<?php namespace Basket\Application\DataTransformers\Players;
+<?php namespace Basket\Application\Serializers;
 
 use Basket\Domain\Players\Player;
 
-class PlayerToArrayDataTransformer
-    implements PlayerDataTransformer
+class PlayerToArraySerializer
+    implements PlayerSerializer
 {
 
     /**
      * {@inheritDoc}
      */
-    public function transform(Player $player){
+    public function serialize(Player $player){
         return [
             "num" => $player->num()->asScalar(),
             "role" => $player->role()->asScalar(),
@@ -22,7 +22,7 @@ class PlayerToArrayDataTransformer
     /**
      * {@inheritDoc}
      */
-    public function createPlayer($data) : Player
+    public function unserialize($data) : Player
     {
         $created = null;
         if (array_key_exists('created',$data) && is_int($data['created'])){            
