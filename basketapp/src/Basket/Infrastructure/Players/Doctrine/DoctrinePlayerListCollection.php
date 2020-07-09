@@ -3,7 +3,7 @@
 use Basket\Domain\Players\Player;
 use Doctrine\Common\Collections\ArrayCollection;
 
-use Basket\Application\DataTransformers\Players\PlayerToArrayDataTransformer as ArrayTransformer;
+use Basket\Application\Serializers\PlayerToArraySerializer as ArraySerializer;
 use Basket\Domain\Players\PlayerList;
 use Basket\Domain\Players\PlayerNumValueObject;
 use Doctrine\Common\Collections\Criteria;
@@ -13,11 +13,11 @@ class DoctrinePlayerListCollection
     implements PlayerList
 {
     /**
-     * Transformer for Players input/output
+     * Serializer for Players input/output
      *
-     * @var ArrayTransformer
+     * @var ArraySerializer
      */
-    protected $transformer;
+    protected $serializer;
 
     /**
      * List of players already sorted
@@ -28,14 +28,14 @@ class DoctrinePlayerListCollection
     protected $sortedList;
 
     /**
-     * Transforms a player using the transformer
+     * Transforms a player using the serializer
      *
      * @param Player $player
      * @return array
      */
     protected function toData(Player $player): array
     {
-        return $this->transformer->transform($player);
+        return $this->serializer->serialize($player);
     }
 
     /**
@@ -46,7 +46,7 @@ class DoctrinePlayerListCollection
      */
     protected function toPlayer(array $player_data): Player
     {
-        return $this->transformer->createPlayer($player_data);
+        return $this->serializer->unserialize($player_data);
     }
 
     /**
@@ -73,11 +73,11 @@ class DoctrinePlayerListCollection
     /**
      * {@inheritDoc}
      */
-    public function extract(PlayerNumValueObject $num) : Player
+    public function extract(PlayerNumValueObject $number) : Player
     {
-        $result = $this->remove($num->value());
+        $result = $this->remove($number->value());
         if (is_null($result))
-            throw new \InvalidArgumentException(sprintf("Player with numn %s was not in the player list",$num->value()));
+            throw new \InvalidArgumentException(sprintf("Player with numn %s was not in the player list",$number->value()));
         return $this->toPlayer($result);
     }
 
@@ -103,14 +103,11 @@ class DoctrinePlayerListCollection
     }
 
     /**
-     * Undocumented function
-     *
-     * @param ArrayTransformer $transformer
-     * @param array $data
+     * {@inheritDoc} function
      */
-    public function __construct(ArrayTransformer $transformer)
+    public function __construct()
     {
-        $this->transformer = $transformer;
+        $this->serializer = new ArraySerializer();
         parent::__construct();
     }
 
@@ -119,7 +116,7 @@ class DoctrinePlayerListCollection
      */
     protected function createFrom(array $players)
     {        
-        $result = new static($this->transformer);
+        $result = new static($this->serializer);
         foreach($players as $player)
             $result->set($player['num'],$player);
         return $result;
