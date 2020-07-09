@@ -37,10 +37,10 @@ class RemovePlayerCommand extends Command
 
             $action = $response->action;
             if ($action == $response::ACTION_NOT_FOUND){
-                $io->warning(sprintf("Player with number #%s was not found in the roster"));
+                $io->warning(sprintf("Player with number #%s was not found in the roster",$num));
             }else{
                 $output = $this->formatter()->format($response->player);
-                $io->success(sprintf('Player has been removed the roster.'));
+                $io->success(sprintf('Player has been removed from the roster.'));
                 $io->section(sprintf("Former player #%s registered data",$num));
                 $io->write($output);
                 $io->writeln(["",""]);                
