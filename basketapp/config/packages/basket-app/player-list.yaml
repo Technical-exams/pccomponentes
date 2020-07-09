@@ -1,0 +1,32 @@
+services:
+  ## Console Command basket:list-players
+  Basket\Application\ListPlayers\ListPlayersCommand:    
+    tags: [console.command]
+    arguments: ['@tactician.commandbus']    
+    calls:
+      - [setOutputFormatter, ['@basket.listplayers.outputformatter']]
+
+  ## Output formatter for the console command
+  basket.listplayers.outputformatter:
+    class: 'Basket\Application\ListPlayers\ListPlayersOutputFormatter'
+    arguments: ['@basket.playerlist.transformer']
+
+  ## Command Handler for Command Bus (Tactician)
+  basket.listplayers.command.handler:
+    class: 'Basket\Application\ListPlayers\ListPlayersCommandHandler'    
+    arguments: ['@basket.listplayers.usecase'] 
+    autowire: true # necessary for CommandTracker injection
+    tags:
+      - { name: tactician.handler, command: Basket\Application\ListPlayers\ListPlayersRequest }
+
+  ## Use Case (Command Handler dependency)
+  basket.listplayers.usecase:
+    class: 'Basket\Application\ListPlayers\ListPlayersUseCase'
+    autowire: true # necessary for Repository injection
+
+  ## DataTransformers
+  basket.playerlist.transformer:
+    class: 'Basket\Application\DataTransformers\Players\PlayerListToJsonDataTransformer'
+    calls:
+      - [setPlayerTransformer,['@basket.player.transformer']]      
+
