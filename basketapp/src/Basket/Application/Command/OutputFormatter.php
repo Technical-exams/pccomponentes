@@ -1,6 +1,6 @@
 <?php namespace Basket\Application\Command;
 
-abstract class OutputFormatter
+class OutputFormatter
 {
     protected $dataTransformer;
 
