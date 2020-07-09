@@ -31,14 +31,15 @@ class PlayerDTO
      * Moment in time when the player was registered for the first time
      * @var int
      */
-    public $created;
+    //public $created;
 
     public function __construct(Player $player)
     {
         $this->num = $player->num()->asScalar();
         $this->label = $player->label();
         $this->role = $player->role()->asScalar();
-        $this->created = $player->created()->asScalar();
+        $this->rating = $player->rating()->asScalar();
+        //$this->created = $player->created()->asScalar();
     }
     
 }
