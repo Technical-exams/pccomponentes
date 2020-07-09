@@ -1,0 +1,22 @@
+services:
+  ## Console Command basket:new-player
+  Basket\Application\NewPlayer\NewPlayerCommand:    
+    tags: [console.command]
+    arguments: ['@tactician.commandbus']    
+    calls:
+      - [setOutputFormatter, ['@basket.player.outputformatter']]
+
+  ## Command Handler for Command Bus (Tactician)
+  basket.newplayer.command.handler:
+    class: 'Basket\Application\NewPlayer\NewPlayerCommandHandler'    
+    arguments: ['@basket.newplayer.usecase'] 
+    autowire: true # necessary for CommandTracker injection
+    tags:
+      - { name: tactician.handler, command: Basket\Application\NewPlayer\NewPlayerRequest }
+
+  ## Use Case (Command Handler dependency)
+  basket.newplayer.usecase:
+    class: 'Basket\Application\NewPlayer\NewPlayerUseCase'
+    autowire: true # necessary for Repository injection
+
+
