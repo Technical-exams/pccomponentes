@@ -1,0 +1,22 @@
+services:
+  ## Console Command basket:new-player
+  Basket\Application\RemovePlayer\RemovePlayerCommand:    
+    tags: [console.command]
+    arguments: ['@tactician.commandbus']    
+    calls:
+      - [setOutputFormatter, ['@basket.player.outputformatter']]
+
+  ## Command Handler for Command Bus (Tactician)
+  basket.removeplayer.command.handler:
+    class: 'Basket\Application\RemovePlayer\RemovePlayerCommandHandler'    
+    arguments: ['@basket.removeplayer.usecase'] 
+    autowire: true # necessary for CommandTracker injection
+    tags:
+      - { name: tactician.handler, command: Basket\Application\RemovePlayer\RemovePlayerRequest }
+
+  ## Use Case (Command Handler dependency)
+  basket.removeplayer.usecase:
+    class: 'Basket\Application\RemovePlayer\RemovePlayerUseCase'
+    autowire: true # necessary for Repository injection
+
+
