@@ -1,6 +1,5 @@
 <?php namespace Basket\Infrastructure\Players\Doctrine;
 
-use Basket\Application\DataTransformers\Players\PlayerToArrayDataTransformer;
 use Basket\Domain\Players\Player;
 use Basket\Domain\Players\PlayerNumValueObject;
 use Basket\Infrastructure\Common\InMemory\InMemoryDataSource;
@@ -10,9 +9,9 @@ class DoctrineInMemoryPlayerDataSource
 {
     protected $collection;
 
-    public function __construct(PlayerToArrayDataTransformer $playersTransformer)
+    public function __construct()
     {
-        $this->collection = new DoctrinePlayerListCollection($playersTransformer);
+        $this->collection = new DoctrinePlayerListCollection();
     }
 
     /**
@@ -42,7 +41,7 @@ class DoctrineInMemoryPlayerDataSource
      */
     public function fetchOne($num)
     {
-        if (array_key_exists($num->value(),$this->collection))
+        if (isset($this->collection[$num->value()] ) ) //|| array_key_exists($num->value(),$this->collection))
             return $this->collection[$num->value()];
         else
             return null;
