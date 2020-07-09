@@ -12,6 +12,7 @@ use Basket\Application\NewPlayer\NewPlayerRequest;
 use Basket\Application\RemovePlayer\RemovePlayerRequest;
 
 class RequestEventToArrayDataTransformerFactory
+    implements RequestEventDataTransformerFactory
 {
     public function __invoke(RequestEvent $requestEvent) : RequestEventDataTransformer
     {
