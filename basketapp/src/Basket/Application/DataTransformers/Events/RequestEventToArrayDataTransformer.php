@@ -4,7 +4,9 @@ use Basket\Application\Command\CommandRequest;
 use Basket\Application\DataTransformers\Requests\RequestToArrayDataTransformer;
 use Basket\Application\Events\RequestEvent;
 
-abstract class RequestEventToArrayDataTransformer{
+class RequestEventToArrayDataTransformer
+    implements RequestEventDataTransformer
+{
 
     /**
      * Request to array transformer
