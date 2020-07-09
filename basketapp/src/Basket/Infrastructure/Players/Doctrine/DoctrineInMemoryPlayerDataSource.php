@@ -1,17 +1,43 @@
 <?php namespace Basket\Infrastructure\Players\Doctrine;
 
+use Basket\Application\Serializers\BuiltInPlayerListSerializer;
 use Basket\Domain\Players\Player;
 use Basket\Domain\Players\PlayerNumValueObject;
 use Basket\Infrastructure\Common\InMemory\InMemoryDataSource;
+use Doctrine\Common\Cache\FilesystemCache;
 
 class DoctrineInMemoryPlayerDataSource
     implements InMemoryDataSource
 {
+    protected $serializer;
     protected $collection;
+    protected $cache;
+    protected $cacheId;
 
-    public function __construct()
-    {
-        $this->collection = new DoctrinePlayerListCollection();
+    public function __construct(string $cacheFolder, string $cacheId)
+    {        
+        $this->serializer = new BuiltInPlayerListSerializer();
+        $this->cache = new FilesystemCache($cacheFolder);
+        $this->cacheId = $cacheId;
+        $this->loadData();
+    }
+
+    public function __destruct(){
+        $this->persistData();
+    }
+
+    protected function loadData(){
+        if ($this->cache->contains($this->cacheId)){
+            $serialized_players = $this->cache->fetch($this->cacheId);            
+            $this->collection = $this->serializer->unserialize($serialized_players);
+        }else{
+            $this->collection = new DoctrinePlayerListCollection();
+        }
+    }
+
+    protected function persistData(){
+        $serialized_players = $this->serializer->serialize($this->collection);
+        $this->cache->save($this->cacheId,$serialized_players);
     }
 
     /**
