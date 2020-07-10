@@ -4,7 +4,7 @@ services:
     tags: [console.command]
     arguments: ['@tactician.commandbus']    
     calls:
-      - [setOutputFormatter, ['@basket.listplayers.outputformatter']]
+      - [setOutputFormatter, ['@basket.player.outputformatter']]
 
   ## Output formatter for the console command
   basket.listplayers.outputformatter:

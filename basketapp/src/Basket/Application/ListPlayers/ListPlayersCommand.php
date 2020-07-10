@@ -15,7 +15,7 @@ use Basket\Application\ListPlayers\ListPlayersRequest;
 class ListPlayersCommand 
     extends Command
 {
-    protected static $defaultName = 'basket:list-players';
+    protected static $defaultName = 'roster';
 
     protected function configure()
     {
@@ -36,11 +36,13 @@ class ListPlayersCommand
 
         $request = new ListPlayersRequest($order);        
         $response = $this->commandBus()->handle($request);
-
-        $output = $this->formatter()->format($response->players);
-
-        $io->success('These are the found players');
-        $io->write($output);
+       
+        $io->success(sprintf('There are %s players in the roster.', count($response->players)));
+        foreach ($response->players as $player){
+            $io->section(sprintf("Player #%s",$player->num));
+            $output = $this->formatter()->format($player);
+            $io->write($output);
+        }        
         $io->writeln(["",""]);
 
         return static::SUCCESS;

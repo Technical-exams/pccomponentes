@@ -5,6 +5,8 @@ use Basket\Application\Command\CommandResponse;
 use Basket\Application\Command\CommandUseCase;
 use Basket\Domain\Players\PlayersRepository;
 
+use Basket\Domain\Players\Player;
+use Basket\Domain\Players\PlayerDTO;
 
 class ListPlayersUseCase
     implements CommandUseCase
@@ -41,6 +43,10 @@ class ListPlayersUseCase
             $result = $this->repository->findAll();
         }
         
+        array_walk($result,function(&$player){
+            $player = new PlayerDTO($player);
+        });
+
         $response = new ListPlayersResponse($result);
         return $response;
     }
