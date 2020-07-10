@@ -18,4 +18,8 @@ class Kernel extends BaseKernel
         
     }
 
+    protected function configureRoutes(RoutingConfigurator $routes): void
+    {
+    }
+
 }
