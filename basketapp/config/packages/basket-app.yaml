@@ -1,0 +1,62 @@
+# config/packages/basket-app.yaml
+imports:
+  - { resource: 'basket-app/player-list.yaml'}
+  - { resource: 'basket-app/remove-player.yaml'}  
+  - { resource: 'basket-app/new-player.yaml'}
+  
+parameters:
+  players.cache.id: '%env(CACHE_ID)%'
+  players.cache.folder: '%env(CACHE_FOLDER)%'  
+  command.history.file: '%env(COMMAND_HISTORY_FILE)%'
+
+services:
+
+  # Interfaces - Instance Constructor Bindings
+  Basket\Application\Command\CommandTracker: '@basket.command.tracker'
+  Basket\Domain\Players\PlayersRepository: '@basket.players.repository'
+  Basket\Application\Serializers\PlayerSerializer: '@basket.player.serializer'
+  Basket\Application\Factories\DataTransformers\RequestEventDataTransformerFactory: '@basket.requestevents.transformer'       
+
+  # Common Repositories
+  basket.repository.adapter:
+    class: 'Basket\Infrastructure\Players\Doctrine\DoctrineInMemoryPlayerDataSource'
+    #arguments: ['%env(CACHE_FOLDER)%','%env(CACHE_ID)']
+    arguments: ['%players.cache.folder%','%players.cache.id%']
+    #class: 'Basket\Infrastructure\Common\Redis\RedisAdapter'    
+    #factory: ['Basket\Infrastructure\Common\Redis\RedisAdapterFactory','createAdapter']
+    #arguments: ['%redis.local-connection%']
+
+  basket.players.repository:
+    # class: 'Basket\Infrastructure\Players\Redis\RedisPlayersRepository'
+    class: 'Basket\Infrastructure\Players\InMemory\InMemoryPlayersRepository'
+    arguments: ['@basket.repository.adapter']
+  
+
+  # Common Data Transformers, Serializers & Formatters
+  basket.player.transformer:
+    class: 'Basket\Application\DataTransformers\Players\PlayerDTOToJsonDataTransformer'
+
+  basket.player.serializer:
+    class: 'Basket\Application\Serializers\PlayerToArraySerializer'
+
+  ## Generic Output formatter for the console command
+  basket.player.outputformatter:
+    class: 'Basket\Application\Command\OutputFormatter'
+    arguments: ['@basket.player.transformer']
+
+
+  ## Command Tracking
+  basket.command.tracker:
+    class: 'Basket\Infrastructure\Command\CSV\CSVCommandTracker'
+    autowire: true
+    arguments:
+      $commandRegistryPath: '%command.history.file%'
+
+  basket.requestevents.transformer:
+    class: 'Basket\Application\Factories\DataTransformers\RequestEventToArrayDataTransformerFactory'
+
+  basket.middleware.requestevents:
+    class: 'Basket\Infrastructure\Command\Tactician\TacticianMiddlewareRequestEventHandler'
+    autowire: true # Needs the injection of a Command Tracker
+
+
