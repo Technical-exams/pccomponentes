@@ -11,7 +11,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class NewPlayerCommand 
     extends Command
 {
-    protected static $defaultName = 'basket:new-player';
+    protected static $defaultName = 'player';
 
 
     protected function configure()

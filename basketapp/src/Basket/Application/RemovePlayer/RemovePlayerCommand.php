@@ -11,7 +11,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class RemovePlayerCommand extends Command
 {
-    protected static $defaultName = 'basket:remove-player';
+    protected static $defaultName = 'remove';
 
     protected function configure()
     {
