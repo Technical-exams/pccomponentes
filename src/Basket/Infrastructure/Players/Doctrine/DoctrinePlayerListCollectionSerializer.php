@@ -4,7 +4,7 @@ use Basket\Application\Serializers\PlayerListSerializer;
 use Basket\Application\Serializers\PlayerSerializer;
 use Basket\Domain\Players\PlayerList;
 
-class BuiltInPlayerListSerializer
+class DoctrinePlayerListCollectionSerializer
     implements PlayerListSerializer
 {
 
